@@ -1,29 +1,20 @@
-# Local lab: TheHive + Cortex (open-source SOAR)
+# TheHive + Cortex, running locally
 
-**Status: running, verified end-to-end on 2026-08-29.**
+My stand-in for Sentinel's SOAR layer while I don't have a paid tenant to build real Logic Apps against. TheHive handles case management, Cortex is the automation/enrichment side — together they're roughly the open-source version of "alert comes in, gets a case, gets enriched, gets acted on."
 
-This replaces Microsoft Sentinel's SOAR/playbook role with a fully open-source, self-hosted equivalent — no Azure subscription needed to practice case management and automated enrichment.
+Stack: TheHive and Cortex (both AGPL), backed by Cassandra and Elasticsearch.
 
-## Stack
-- [TheHive](https://github.com/TheHive-Project/TheHive) (AGPL) — case/alert management
-- [Cortex](https://github.com/TheHive-Project/Cortex) (AGPL) — automated analyzers/responders (the "playbook" layer)
-- Cassandra + Elasticsearch — TheHive's storage backend
-
-## Run it
+## Running it
 ```bash
 cd local-lab
-echo "APPLICATION_SECRET=$(openssl rand -hex 32)" > .env   # generate your own, never commit this file
+echo "APPLICATION_SECRET=$(openssl rand -hex 32)" > .env
 docker compose up -d
 ```
-- TheHive: http://localhost:9000
-- Cortex: http://localhost:9001
+TheHive on :9000, Cortex on :9001. First time you open either, you'll hit a setup wizard — creating the admin account, then generating a Cortex API key and pasting it into TheHive to link the two. No default login ships with either of these, which I actually appreciate.
 
-First run of each needs its one-time setup wizard (create the initial admin account/database in TheHive's UI, then link Cortex to TheHive with an API key generated in Cortex's UI). That's a manual step by design — TheHive doesn't ship default credentials.
+## The thing that tripped me up
+The TheHive image has a `--no-config-secret` flag that sounds like it disables the requirement for an application secret. It doesn't — try that in prod mode and it just crashes on startup complaining the secret isn't set, flag or no flag. Turns out you still need to generate a real one and pass it through `.env`. Once I did that it came up fine.
 
-## What I learned / trade-offs
-The `strangebee/thehive:5.4` image refuses to start with `--no-config-secret` in prod mode — despite the flag's name, TheHive (Play Framework under the hood) hard-requires `application.secret` to be set explicitly once outside dev mode. Fixed by generating a real secret with `openssl rand -hex 32` and passing it via `.env` (gitignored) rather than baking it into the compose file.
+Also, Cortex doesn't have an arm64 image yet, so on my Mac it's running under emulation — takes a while longer to become responsive than TheHive does, but it gets there.
 
-Also note: Cortex's official image doesn't publish arm64 builds yet, so it runs under x86 emulation on Apple Silicon — noticeably slower to start than TheHive itself, but stable once up.
-
-## Security note
-`.env` (containing `APPLICATION_SECRET`) is gitignored — never commit it. This stack has no real credentials for anything external; it's a fully local case-management sandbox.
+`.env` never gets committed — it's the only thing in this folder that's actually sensitive, since it holds the application secret.

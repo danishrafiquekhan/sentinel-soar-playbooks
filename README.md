@@ -1,26 +1,12 @@
-# Sentinel SOAR Playbooks
+# sentinel-soar-playbooks
 
-**Status: in progress** — automated triage playbooks for Microsoft Sentinel, built as Logic Apps.
+Automated triage — the part of a SOC job that's mostly "look up this user, check this IP, was this device compliant" over and over. Every alert like that is a candidate for a playbook instead of a human doing the same three lookups fifty times a week.
 
-## What this is
-Sentinel automation rules and their underlying Logic App definitions for enriching and triaging alerts automatically.
+This repo was originally going to be pure Sentinel Logic Apps. It still will be, eventually — but I don't have an Azure tenant with Sentinel enabled sitting around for free, so the actual running automation right now is TheHive + Cortex instead (open source, runs on my own machine, see `local-lab/`). The Logic App designs still get written up in `playbooks/` since that's the specific skill the job postings ask about — I'm just not pretending I've deployed something I haven't.
 
-## Why I built it
-Manual first-pass triage (looking up user/IP context, checking sign-in risk) is repetitive and a natural automation target — this shows I can design that automation, not just describe it.
-
-## How it works
-Each playbook in `playbooks/` includes the exported Logic App definition (sanitised — no tenant IDs, connection strings, or subscription IDs) and a README explaining what it automates and the design decisions behind it.
-
-## What I learned / trade-offs
-_(filled in per playbook — e.g. what triggered false enrichment, where automation should stop and a human should take over)_
-
-## Security note
-Exported playbook JSON is sanitised before commit. No real tenant/subscription IDs or connection strings.
-
-## Running a local, open-source SOAR for free
-`local-lab/` runs TheHive + Cortex in Docker — the open-source case-management/automation equivalent of Sentinel's playbook layer, no Azure subscription needed. See `local-lab/README.md`.
+Exported playbook JSON gets sanitised before it's committed — no tenant IDs, no connection strings.
 
 ## One-time setup after cloning
 ```bash
-git config core.hooksPath .githooks   # enables the gitleaks secret-scan on commit
+git config core.hooksPath .githooks
 ```
