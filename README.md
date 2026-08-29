@@ -17,6 +17,9 @@ _(filled in per playbook — e.g. what triggered false enrichment, where automat
 ## Security note
 Exported playbook JSON is sanitised before commit. No real tenant/subscription IDs or connection strings.
 
+## Running a local, open-source SOAR for free
+`local-lab/` runs TheHive + Cortex in Docker — the open-source case-management/automation equivalent of Sentinel's playbook layer, no Azure subscription needed. See `local-lab/README.md`.
+
 ## One-time setup after cloning
 ```bash
 git config core.hooksPath .githooks   # enables the gitleaks secret-scan on commit

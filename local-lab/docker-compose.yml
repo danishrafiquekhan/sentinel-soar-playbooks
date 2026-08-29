@@ -1,0 +1,68 @@
+services:
+  cassandra:
+    image: cassandra:4.1
+    environment:
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+      - CASSANDRA_CLUSTER_NAME=thehive
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.24
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9200/_cluster/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+
+  cortex:
+    image: thehiveproject/cortex:3.1.7
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - "9001:9001"
+    environment:
+      - job_directory=/tmp/cortex-jobs
+    volumes:
+      - cortex-jobs:/tmp/cortex-jobs
+    command: --es-hostname elasticsearch --job-directory /tmp/cortex-jobs
+
+  thehive:
+    image: strangebee/thehive:5.4
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    ports:
+      - "9000:9000"
+    environment:
+      - APPLICATION_SECRET=${APPLICATION_SECRET}
+    volumes:
+      - thehive-data:/opt/thp/thehive/files
+    command: >
+      --cql-hostnames cassandra
+      --index-backend elasticsearch
+      --es-hostnames elasticsearch
+      --cortex-hostnames cortex
+      --cortex-port 9001
+      --secret "${APPLICATION_SECRET}"
+
+volumes:
+  cassandra-data:
+  es-data:
+  cortex-jobs:
+  thehive-data:
