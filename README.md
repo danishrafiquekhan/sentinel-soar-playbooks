@@ -1,4 +1,4 @@
-# sentinel-soar-playbooks
+**sentinel-soar-playbooks**
 
 Automated triage: the part of a SOC job that is mostly "look up this user, check this IP, was this device compliant" over and over. Every alert like that is a candidate for a playbook instead of a human doing the same three lookups fifty times a week.
 
@@ -6,7 +6,7 @@ This repo was originally going to be pure Sentinel Logic Apps. It still will be,
 
 Exported playbook JSON gets sanitised before it is committed: no tenant IDs, no connection strings.
 
-## One-time setup after cloning
+**One-time setup after cloning**
 ```bash
 git config core.hooksPath .githooks
 ```
