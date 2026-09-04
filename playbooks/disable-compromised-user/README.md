@@ -1,13 +1,13 @@
-# disable-compromised-user
+**disable-compromised-user**
 
 Not built yet. Design notes so far:
 
-## What it's supposed to do
+**What it's supposed to do**
 When an impossible-travel or password-spray analytics rule fires with high confidence (tying into `password-spray.yml` / `impossible-travel.kql` over in the detection-engineering repo), pull the flagged sign-in's user, sanity-check it isn't a known VPN/travel exception, then disable the account and revoke its active sessions so the attacker can't keep using a valid token while the alert sits in a Tier 1 queue. Getting a full sign-in lockout to happen in under a minute instead of after someone's finished their coffee is the entire point — a password-spray hit that's still "open, unassigned" twenty minutes later is a password-spray hit the attacker had twenty free minutes with.
 
-## Why this shape
+**Why this shape**
 Sentinel version: Logic App triggered off the automation rule, same as the enrichment one, but this one doesn't get to just read and comment — it writes to the directory, so it doesn't run unsupervised. First step after the entity lookup is an Adaptive Card posted to a Teams channel ("disable jane.doe@tenant.onmicrosoft.com — yes/no"), and only on approval does it call `POST /users/{id}/revokeSignInSessions` followed by `PATCH /users/{id}` with `accountEnabled: false` against Microsoft Graph. Both need `User.ReadWrite.All` (application permission, admin-consented) on the automation account's app registration — revoking sessions specifically needs the ability to bump the user's `refreshTokensValidFromDateTime`, which is what that endpoint does under the hood. I looked at skipping the approval step for the password-spray case specifically, since spray hits are usually less ambiguous than a single impossible-travel flag, but decided against it — a shared account, a break-glass account, or someone's manager logging in from an airport lounge on a work trip all look identical to this rule, and a false positive here isn't "wrong tag on a case," it's "locked a real person out of their job."
 Local version (see `../../local-lab/`): would be a TheHive responder — takes the user entity off the case, hits the same Graph endpoints, posts the result back as a case comment. Same gate problem applies, and Cortex/TheHive doesn't have a first-class approval-gate primitive the way Logic Apps + Teams does, so I'd have to fake it with a "requires manual analyst action to run this responder" step instead of a real interactive prompt. Haven't built it — this one's staying a design doc until I have a tenant to actually test the revoke call against, because I'm not shipping account-lockout logic I've never watched fail.
 
-## What's left manual
+**What's left manual**
 The approval click itself, always — this playbook should never be able to disable someone with zero human in the loop. Rollback isn't automated either: re-enabling is just `accountEnabled: true` back through Graph, but I want a person confirming the account is actually clean first, not a timer. And it doesn't touch conditional access or MFA registration, on purpose — reversing this one playbook's damage should be one clean step, not untangling three different systems it also touched.
