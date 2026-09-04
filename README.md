@@ -10,3 +10,5 @@ Exported playbook JSON gets sanitised before it is committed: no tenant IDs, no 
 ```bash
 git config core.hooksPath .githooks
 ```
+
+For the principles behind when to automate vs keep a human in the loop, and a full walkthrough of each playbook's design decisions, see [Part 7](https://github.com/danishrafiquekhan/security-lab-notes/blob/main/parts/07-soar-automation-principles.md) of `security-lab-notes`.
