@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose config
+        working-directory: local-lab
+        env:
+          APPLICATION_SECRET: ci-placeholder-secret
+        run: docker compose config --quiet
+
+      - name: Validate any exported playbook JSON is well-formed
+        run: |
+          python3 -c "
+          import json, glob
+          files = glob.glob('playbooks/**/*.json', recursive=True)
+          for f in files:
+              json.load(open(f))
+              print(f, 'OK')
+          print(f'checked {len(files)} playbook JSON file(s)')
+          "
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
