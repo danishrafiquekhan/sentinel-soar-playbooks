@@ -1,5 +1,7 @@
 **sentinel-soar-playbooks**
 
+[![CI](https://github.com/danishrafiquekhan/sentinel-soar-playbooks/actions/workflows/ci.yml/badge.svg)](https://github.com/danishrafiquekhan/sentinel-soar-playbooks/actions/workflows/ci.yml)
+
 Automated triage: the part of a SOC job that is mostly "look up this user, check this IP, was this device compliant" over and over. Every alert like that is a candidate for a playbook instead of a human doing the same three lookups fifty times a week.
 
 This repo was originally going to be pure Sentinel Logic Apps. It still will be, eventually, but I do not have an Azure tenant with Sentinel enabled sitting around for free, so the actual running automation right now is TheHive + Cortex instead (open source, runs on my own machine, see `local-lab/`). The Logic App designs still get written up in `playbooks/` since that is the specific skill the job postings ask about. I am just not pretending I have deployed something I have not.
